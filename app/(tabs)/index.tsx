@@ -1,75 +1,104 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import CategoryTabs, { type Category } from "@/components/CategoryTabs";
+import RecipeCard, { type Recipe } from "@/components/RecipeCard";
+import RecipesHeader from "@/components/RecipesHeader";
+import { ThemedView } from "@/components/ThemedView";
 
 export default function HomeScreen() {
+  const [category, setCategory] = useState<string>("all");
+  const [difficulty, setDifficulty] = useState<
+    "All" | "Easy" | "Medium" | "Hard"
+  >("All");
+
+  const categories: Category[] = [
+    { key: "all", label: "All", count: 4 },
+    { key: "breakfast", label: "Breakfast", count: 1 },
+    { key: "lunch", label: "Lunch", count: 1 },
+    { key: "dinner", label: "Dinner", count: 1 },
+    { key: "desserts", label: "Desserts", count: 1 },
+  ];
+
+  const data: Recipe[] = useMemo(
+    () => [
+      {
+        id: "1",
+        title: "Classic Pancakes",
+        description: "Fluffy, golden pancakes perfect for weekend mornings",
+        difficulty: "Easy",
+        timeMins: 20,
+        servings: 4,
+        meal: "Breakfast",
+        tags: ["quick", "family-friendly"],
+      },
+      {
+        id: "2",
+        title: "Caesar Salad",
+        description: "Fresh romaine lettuce with classic Caesar dressing",
+        difficulty: "Easy",
+        timeMins: 15,
+        servings: 2,
+        meal: "Lunch",
+        tags: ["healthy", "vegetarian"],
+        image: require("@/assets/images/react-logo.png"),
+      },
+      {
+        id: "3",
+        title: "Beef Tacos",
+        description:
+          "Seasoned ground beef in soft tortillas with fresh toppings",
+        difficulty: "Medium",
+        timeMins: 25,
+        servings: 4,
+        meal: "Dinner",
+        tags: ["mexican", "family-dinner"],
+      },
+      {
+        id: "4",
+        title: "Chocolate Chip Cookies",
+        description: "Classic homemade cookies with gooey chocolate chips",
+        difficulty: "Easy",
+        timeMins: 30,
+        servings: 24,
+        meal: "Desserts",
+        tags: ["dessert", "baking"],
+      },
+    ],
+    []
+  );
+
+  const filtered = data
+    .filter((r) =>
+      category === "all" ? true : r.meal.toLowerCase() === category
+    )
+    .filter((r) => (difficulty === "All" ? true : r.difficulty === difficulty));
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ThemedView style={styles.container}>
+      <FlatList
+        data={filtered}
+        keyExtractor={(i) => i.id}
+        ListHeaderComponent={
+          <View>
+            <RecipesHeader
+              difficulty={difficulty}
+              onDifficultyChange={setDifficulty}
+            />
+            <CategoryTabs
+              categories={categories}
+              value={category}
+              onChange={setCategory}
+            />
+          </View>
+        }
+        renderItem={({ item }) => <RecipeCard item={item} />}
+        contentContainerStyle={{ paddingBottom: 24 }}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1 },
 });
