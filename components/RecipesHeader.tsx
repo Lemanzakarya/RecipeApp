@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
+import React from "react";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -8,19 +8,22 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useThemeController } from "@/providers/ThemeProvider";
 
 type Props = {
-  difficulty?: "All" | "Easy" | "Medium" | "Hard";
-  onDifficultyChange?: (d: "All" | "Easy" | "Medium" | "Hard") => void;
+  query: string;
+  onQueryChange: (q: string) => void;
+  difficulty: "All" | "Easy" | "Medium" | "Hard";
+  onDifficultyChange: (d: "All" | "Easy" | "Medium" | "Hard") => void;
 };
 
 export default function RecipesHeader({
-  difficulty = "All",
+  query,
+  onQueryChange,
+  difficulty,
   onDifficultyChange,
 }: Props) {
   const text = useThemeColor({}, "text");
   const background = useThemeColor({}, "background");
+  const icon = useThemeColor({}, "icon");
   const { colorScheme, toggle } = useThemeController();
-  const [open, setOpen] = useState(false);
-  const options = useMemo(() => ["All", "Easy", "Medium", "Hard"] as const, []);
 
   return (
     <ThemedView style={styles.container}>
@@ -29,18 +32,11 @@ export default function RecipesHeader({
         <View style={styles.iconRow}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => setOpen(true)}
-            style={styles.iconBtn}
-          >
-            <IconSymbol name="chevron.right" color={text} size={22} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
             onPress={toggle}
             style={styles.iconBtn}
           >
             <IconSymbol
-              name="chevron.left.forwardslash.chevron.right"
+              name={colorScheme === "dark" ? "sun.max.fill" : "moon.fill"}
               color={text}
               size={22}
             />
@@ -54,54 +50,37 @@ export default function RecipesHeader({
           { backgroundColor: background, borderColor: "#e5e7eb" },
         ]}
       >
+        <IconSymbol name="magnifyingglass" color={icon} size={18} />
         <TextInput
+          value={query}
+          onChangeText={onQueryChange}
           placeholder="Search recipes..."
-          placeholderTextColor={(text as string) + "80"}
+          placeholderTextColor={icon as string}
           style={[styles.input, { color: text }]}
+          autoCorrect={false}
+          autoCapitalize="none"
+          clearButtonMode="while-editing"
         />
       </View>
 
-      <Pressable style={styles.filterBtn} onPress={() => setOpen(true)}>
-        <ThemedText style={styles.filterText}>Filters</ThemedText>
-      </Pressable>
-
-      <Modal
-        transparent
-        visible={open}
-        animationType="fade"
-        onRequestClose={() => setOpen(false)}
-      >
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
-        <ThemedView style={styles.sheet}>
-          <ThemedText type="subtitle" style={{ marginBottom: 12 }}>
-            Filter by difficulty
-          </ThemedText>
-          <View style={{ gap: 8 }}>
-            {options.map((opt) => {
-              const active = opt === difficulty;
-              return (
-                <Pressable
-                  key={opt}
-                  onPress={() => {
-                    onDifficultyChange?.(opt);
-                    setOpen(false);
-                  }}
-                  style={[styles.option, active && styles.optionActive]}
-                >
-                  <ThemedText
-                    style={[
-                      styles.optionText,
-                      active && styles.optionTextActive,
-                    ]}
-                  >
-                    {opt}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ThemedView>
-      </Modal>
+      <View style={styles.chipsRow}>
+        {(["All", "Easy", "Medium", "Hard"] as const).map((opt) => {
+          const active = opt === difficulty;
+          return (
+            <Pressable
+              key={opt}
+              onPress={() => onDifficultyChange(opt)}
+              style={[styles.chip, active && styles.chipActive]}
+            >
+              <ThemedText
+                style={[styles.chipText, active && styles.chipTextActive]}
+              >
+                {opt}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
+      </View>
     </ThemedView>
   );
 }
@@ -124,42 +103,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  input: { fontSize: 16 },
-  filterBtn: {
-    marginTop: 8,
-    alignSelf: "flex-start",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  filterText: { fontWeight: "600" },
-  backdrop: {
-    position: "absolute",
-    inset: 0 as any,
-    backgroundColor: "rgba(0,0,0,0.25)",
-  },
-  sheet: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    top: 120,
-    borderRadius: 12,
-    padding: 16,
+  input: { flex: 1, fontSize: 16 },
+  chipsRow: { flexDirection: "row", gap: 8, marginTop: 8 },
+  chip: {
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
   },
-  option: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  optionActive: { backgroundColor: "#0a7ea4", borderColor: "#0a7ea4" },
-  optionText: { fontSize: 16 },
-  optionTextActive: { color: "#fff", fontWeight: "700" },
+  chipActive: { backgroundColor: "#0a7ea4", borderColor: "#0a7ea4" },
+  chipText: { fontSize: 14 },
+  chipTextActive: { color: "#fff", fontWeight: "700" },
 });

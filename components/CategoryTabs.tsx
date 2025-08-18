@@ -49,7 +49,7 @@ export default function CategoryTabs({ categories, value, onChange }: Props) {
                 styles.pill,
                 {
                   backgroundColor: active ? tint : background,
-                  borderColor: active ? tint : "#d1d5db",
+                  borderColor: active ? tint : "rgba(148,163,184,0.35)",
                 },
               ]}
             >

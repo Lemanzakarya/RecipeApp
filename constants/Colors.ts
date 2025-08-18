@@ -3,24 +3,25 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Brand palette: Indigo
+const tintColorLight = "#6366F1"; // indigo-500
+const tintColorDark = "#A5B4FC"; // indigo-300
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: "#0F172A",
+    background: "#FFFFFF",
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: "#64748B",
+    tabIconDefault: "#94A3B8",
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: "#E5E7EB",
+    background: "#0B1220",
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: "#9BA1A6",
+    tabIconDefault: "#6B7280",
     tabIconSelected: tintColorDark,
   },
 };

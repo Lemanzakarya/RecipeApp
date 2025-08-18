@@ -1,4 +1,4 @@
-import { Image } from "expo-image";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -21,6 +21,8 @@ export type Recipe = {
 export default function RecipeCard({ item }: { item: Recipe }) {
   const card = useThemeColor({}, "background");
   const text = useThemeColor({}, "text");
+  const tint = useThemeColor({}, "tint");
+  const icon = useThemeColor({}, "icon");
 
   const diffColor =
     item.difficulty === "Easy"
@@ -30,18 +32,24 @@ export default function RecipeCard({ item }: { item: Recipe }) {
       : "#ef4444";
 
   return (
-    <ThemedView style={[styles.card, { backgroundColor: card }]}>
+    <ThemedView
+      style={[
+        styles.card,
+        { backgroundColor: card, borderColor: (icon as string) + "33" },
+      ]}
+    >
       <View style={styles.row}>
         <View style={styles.thumbWrap}>
-          {item.image ? (
-            <Image
-              source={item.image}
-              style={styles.thumb}
-              contentFit="cover"
-            />
-          ) : (
-            <View style={[styles.thumb, styles.thumbPlaceholder]} />
-          )}
+          <ImageWithFallback
+            uri={
+              typeof item.image === "string"
+                ? item.image
+                : item.image?.uri ?? undefined
+            }
+            width={64}
+            height={64}
+            borderRadius={8}
+          />
           <View style={[styles.badge, { backgroundColor: diffColor }]}>
             <ThemedText style={styles.badgeText}>{item.difficulty}</ThemedText>
           </View>
@@ -55,21 +63,46 @@ export default function RecipeCard({ item }: { item: Recipe }) {
             {item.description}
           </ThemedText>
           <View style={styles.metaRow}>
-            <ThemedText style={styles.meta}>{`${item.timeMins}m`}</ThemedText>
-            <ThemedText style={styles.dot}>•</ThemedText>
-            <ThemedText style={styles.meta}>{`${item.servings}`}</ThemedText>
-            <ThemedText style={styles.dot}>•</ThemedText>
-            <ThemedText style={styles.meta}>{item.meal}</ThemedText>
+            <ThemedText
+              style={[styles.meta, { color: icon }]}
+            >{`${item.timeMins}m`}</ThemedText>
+            <ThemedText style={[styles.dot, { color: icon }]}>•</ThemedText>
+            <ThemedText
+              style={[styles.meta, { color: icon }]}
+            >{`${item.servings}`}</ThemedText>
+            <ThemedText style={[styles.dot, { color: icon }]}>•</ThemedText>
+            <ThemedText style={[styles.meta, { color: icon }]}>
+              {item.meal}
+            </ThemedText>
           </View>
           <View style={styles.tagsRow}>
             {item.tags?.slice(0, 3).map((t) => (
-              <View key={t} style={styles.tag}>
-                <ThemedText style={styles.tagText}>{t}</ThemedText>
+              <View
+                key={t}
+                style={[
+                  styles.tag,
+                  {
+                    backgroundColor: "rgba(99,102,241,0.12)",
+                    borderColor: (tint as string) + "33",
+                  },
+                ]}
+              >
+                <ThemedText style={[styles.tagText, { color: tint }]}>
+                  {t}
+                </ThemedText>
               </View>
             ))}
             {item.tags?.length > 3 && (
-              <View style={styles.tag}>
-                <ThemedText style={styles.tagText}>{`+${
+              <View
+                style={[
+                  styles.tag,
+                  {
+                    backgroundColor: "rgba(99,102,241,0.12)",
+                    borderColor: (tint as string) + "33",
+                  },
+                ]}
+              >
+                <ThemedText style={[styles.tagText, { color: tint }]}>{`+${
                   item.tags.length - 3
                 }`}</ThemedText>
               </View>
@@ -85,7 +118,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#e5e7eb",
     padding: 12,
     marginHorizontal: 16,
     marginVertical: 8,
@@ -94,9 +126,9 @@ const styles = StyleSheet.create({
   thumbWrap: { marginRight: 12 },
   thumb: { width: 64, height: 64, borderRadius: 8 },
   thumbPlaceholder: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "rgba(99,102,241,0.08)",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "rgba(99,102,241,0.15)",
   },
   badge: {
     position: "absolute",
@@ -116,14 +148,14 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 8,
   },
-  meta: { fontSize: 12, opacity: 0.85 },
-  dot: { marginHorizontal: 2, opacity: 0.5 },
+  meta: { fontSize: 12, opacity: 0.95 },
+  dot: { marginHorizontal: 2, opacity: 0.6 },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   tag: {
-    backgroundColor: "#f3f4f6",
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  tagText: { fontSize: 11, color: "#374151" },
+  tagText: { fontSize: 11 },
 });

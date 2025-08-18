@@ -5,12 +5,14 @@ import CategoryTabs, { type Category } from "@/components/CategoryTabs";
 import RecipeCard, { type Recipe } from "@/components/RecipeCard";
 import RecipesHeader from "@/components/RecipesHeader";
 import { ThemedView } from "@/components/ThemedView";
+// no extra components here; keep page minimal
 
 export default function HomeScreen() {
   const [category, setCategory] = useState<string>("all");
   const [difficulty, setDifficulty] = useState<
     "All" | "Easy" | "Medium" | "Hard"
   >("All");
+  const [query, setQuery] = useState<string>("");
 
   const categories: Category[] = [
     { key: "all", label: "All", count: 4 },
@@ -31,6 +33,8 @@ export default function HomeScreen() {
         servings: 4,
         meal: "Breakfast",
         tags: ["quick", "family-friendly"],
+        image:
+          "https://upload.wikimedia.org/wikipedia/commons/6/6f/Stack_of_blueberry_pancakes.jpg",
       },
       {
         id: "2",
@@ -41,7 +45,8 @@ export default function HomeScreen() {
         servings: 2,
         meal: "Lunch",
         tags: ["healthy", "vegetarian"],
-        image: require("@/assets/images/react-logo.png"),
+        image:
+          "https://upload.wikimedia.org/wikipedia/commons/2/28/Caesar_salad_%281%29.jpg",
       },
       {
         id: "3",
@@ -53,6 +58,8 @@ export default function HomeScreen() {
         servings: 4,
         meal: "Dinner",
         tags: ["mexican", "family-dinner"],
+        image:
+          "https://upload.wikimedia.org/wikipedia/commons/0/0b/Street_Tacos.jpg",
       },
       {
         id: "4",
@@ -63,16 +70,31 @@ export default function HomeScreen() {
         servings: 24,
         meal: "Desserts",
         tags: ["dessert", "baking"],
+        image:
+          "https://upload.wikimedia.org/wikipedia/commons/7/70/Chocolate_Chip_Cookies_-_kimberlykv.jpg",
       },
     ],
     []
   );
 
+  // keep simple home without extra sections
+
   const filtered = data
     .filter((r) =>
       category === "all" ? true : r.meal.toLowerCase() === category
     )
-    .filter((r) => (difficulty === "All" ? true : r.difficulty === difficulty));
+    .filter((r) => (difficulty === "All" ? true : r.difficulty === difficulty))
+    .filter((r) => {
+      if (!query.trim()) return true;
+      const hay = (
+        r.title +
+        " " +
+        r.description +
+        " " +
+        r.tags.join(" ")
+      ).toLowerCase();
+      return hay.includes(query.trim().toLowerCase());
+    });
 
   return (
     <ThemedView style={styles.container}>
@@ -82,6 +104,8 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <View>
             <RecipesHeader
+              query={query}
+              onQueryChange={setQuery}
               difficulty={difficulty}
               onDifficultyChange={setDifficulty}
             />
