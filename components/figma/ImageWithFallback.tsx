@@ -2,12 +2,18 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Image } from "expo-image";
 import React, { useState } from "react";
-import { ActivityIndicator, StyleProp, View, ViewStyle } from "react-native";
+import {
+  ActivityIndicator,
+  DimensionValue,
+  StyleProp,
+  View,
+  ViewStyle,
+} from "react-native";
 
 export type ImageWithFallbackProps = {
   uri?: string | null;
-  width: number;
-  height: number;
+  width?: DimensionValue;
+  height?: DimensionValue;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
   contentFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
@@ -16,8 +22,8 @@ export type ImageWithFallbackProps = {
 
 export default function ImageWithFallback({
   uri,
-  width,
-  height,
+  width = 64,
+  height = 64,
   borderRadius = 12,
   style,
   contentFit = "cover",
@@ -30,6 +36,13 @@ export default function ImageWithFallback({
 
   const bg =
     placeholderColor ?? (typeof background === "string" ? background : "#eee");
+
+  const iconSize =
+    typeof width === "number" && typeof height === "number"
+      ? Math.min(width, height) * 0.4
+      : typeof height === "number"
+      ? height * 0.4
+      : 24;
 
   if (!uri || error) {
     return (
@@ -46,11 +59,7 @@ export default function ImageWithFallback({
           style,
         ]}
       >
-        <IconSymbol
-          name="photo"
-          color={icon as string}
-          size={Math.min(width, height) * 0.4}
-        />
+        <IconSymbol name="photo" color={icon as string} size={iconSize} />
       </View>
     );
   }

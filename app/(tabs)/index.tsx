@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
 import CategoryTabs, { type Category } from "@/components/CategoryTabs";
 import RecipeCard, { type Recipe } from "@/components/RecipeCard";
 import RecipesHeader from "@/components/RecipesHeader";
 import { ThemedView } from "@/components/ThemedView";
-// no extra components here; keep page minimal
 
 export default function HomeScreen() {
   const [category, setCategory] = useState<string>("all");
@@ -13,88 +12,107 @@ export default function HomeScreen() {
     "All" | "Easy" | "Medium" | "Hard"
   >("All");
   const [query, setQuery] = useState<string>("");
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const categories: Category[] = [
-    { key: "all", label: "All", count: 4 },
-    { key: "breakfast", label: "Breakfast", count: 1 },
-    { key: "lunch", label: "Lunch", count: 1 },
-    { key: "dinner", label: "Dinner", count: 1 },
-    { key: "desserts", label: "Desserts", count: 1 },
-  ];
+  useEffect(() => {
+    fetch("https://dummyjson.com/recipes")
+      .then((res) => res.json())
+      .then((data) => {
+        const mappedRecipes: Recipe[] = data.recipes.map((r: any) => {
+          let meal: Recipe["meal"] = "Dinner";
+          if (r.mealType && r.mealType.length > 0) {
+            const apiMeal = r.mealType[0];
+            if (apiMeal === "Breakfast") meal = "Breakfast";
+            else if (
+              apiMeal === "Lunch" ||
+              apiMeal === "Snack" ||
+              apiMeal === "Appetizer" ||
+              apiMeal === "Side Dish" ||
+              apiMeal === "Beverage"
+            )
+              meal = "Lunch";
+            else if (apiMeal === "Dinner") meal = "Dinner";
+            else if (apiMeal === "Dessert") meal = "Desserts";
+            else meal = "Dinner"; // Default fallback
+          }
 
-  const data: Recipe[] = useMemo(
-    () => [
-      {
-        id: "1",
-        title: "Classic Pancakes",
-        description: "Fluffy, golden pancakes perfect for weekend mornings",
-        difficulty: "Easy",
-        timeMins: 20,
-        servings: 4,
-        meal: "Breakfast",
-        tags: ["quick", "family-friendly"],
-        image:
-          "https://upload.wikimedia.org/wikipedia/commons/6/6f/Stack_of_blueberry_pancakes.jpg",
-      },
-      {
-        id: "2",
-        title: "Caesar Salad",
-        description: "Fresh romaine lettuce with classic Caesar dressing",
-        difficulty: "Easy",
-        timeMins: 15,
-        servings: 2,
-        meal: "Lunch",
-        tags: ["healthy", "vegetarian"],
-        image:
-          "https://upload.wikimedia.org/wikipedia/commons/2/28/Caesar_salad_%281%29.jpg",
-      },
-      {
-        id: "3",
-        title: "Beef Tacos",
-        description:
-          "Seasoned ground beef in soft tortillas with fresh toppings",
-        difficulty: "Medium",
-        timeMins: 25,
-        servings: 4,
-        meal: "Dinner",
-        tags: ["mexican", "family-dinner"],
-        image:
-          "https://upload.wikimedia.org/wikipedia/commons/0/0b/Street_Tacos.jpg",
-      },
-      {
-        id: "4",
-        title: "Chocolate Chip Cookies",
-        description: "Classic homemade cookies with gooey chocolate chips",
-        difficulty: "Easy",
-        timeMins: 30,
-        servings: 24,
-        meal: "Desserts",
-        tags: ["dessert", "baking"],
-        image:
-          "https://upload.wikimedia.org/wikipedia/commons/7/70/Chocolate_Chip_Cookies_-_kimberlykv.jpg",
-      },
-    ],
-    []
+          return {
+            id: String(r.id),
+            title: r.name,
+            // Use first instruction as description, truncating if too long, or fallback to cuisine
+            description: r.instructions?.[0]
+              ? r.instructions[0]
+              : `${r.cuisine} cuisine`,
+            difficulty:
+              r.difficulty === "Hard"
+                ? "Hard"
+                : r.difficulty === "Medium"
+                ? "Medium"
+                : "Easy",
+            timeMins: (r.prepTimeMinutes || 0) + (r.cookTimeMinutes || 0),
+            servings: r.servings,
+            meal: meal,
+            tags: r.tags || [],
+            image: r.image,
+          };
+        });
+        setRecipes(mappedRecipes);
+        setLoading(false);
+      })
+      .catch((e) => {
+        console.error("Failed to fetch recipes:", e);
+        setLoading(false);
+      });
+  }, []);
+
+  const categories: Category[] = useMemo(() => {
+    const counts = {
+      all: recipes.length,
+      breakfast: recipes.filter((r) => r.meal === "Breakfast").length,
+      lunch: recipes.filter((r) => r.meal === "Lunch").length,
+      dinner: recipes.filter((r) => r.meal === "Dinner").length,
+      desserts: recipes.filter((r) => r.meal === "Desserts").length,
+    };
+    return [
+      { key: "all", label: "All", count: counts.all },
+      { key: "breakfast", label: "Breakfast", count: counts.breakfast },
+      { key: "lunch", label: "Lunch", count: counts.lunch },
+      { key: "dinner", label: "Dinner", count: counts.dinner },
+      { key: "desserts", label: "Desserts", count: counts.desserts },
+    ];
+  }, [recipes]);
+
+  const filtered = useMemo(
+    () =>
+      recipes
+        .filter((r) =>
+          category === "all" ? true : r.meal.toLowerCase() === category
+        )
+        .filter((r) =>
+          difficulty === "All" ? true : r.difficulty === difficulty
+        )
+        .filter((r) => {
+          if (!query.trim()) return true;
+          const hay = (
+            r.title +
+            " " +
+            r.description +
+            " " +
+            r.tags.join(" ")
+          ).toLowerCase();
+          return hay.includes(query.trim().toLowerCase());
+        }),
+    [recipes, category, difficulty, query]
   );
 
-  // keep simple home without extra sections
-
-  const filtered = data
-    .filter((r) =>
-      category === "all" ? true : r.meal.toLowerCase() === category
-    )
-    .filter((r) => (difficulty === "All" ? true : r.difficulty === difficulty))
-    .filter((r) => {
-      if (!query.trim()) return true;
-      const hay = (
-        r.title +
-        " " +
-        r.description +
-        " " +
-        r.tags.join(" ")
-      ).toLowerCase();
-      return hay.includes(query.trim().toLowerCase());
-    });
+  if (loading) {
+    return (
+      <ThemedView style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" />
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -125,4 +143,5 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  center: { justifyContent: "center", alignItems: "center" },
 });
