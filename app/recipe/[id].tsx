@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
-import { Image } from "expo-image";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -9,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Loading } from "@/components/Loading";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 type RecipeDetail = {
   id: number;
@@ -104,11 +104,13 @@ export default function RecipeDetailScreen() {
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
         headerImage={
-          <Image
-            source={{ uri: recipe.image }}
+          <ImageWithFallback
+            uri={recipe.image}
             style={styles.headerImage}
             contentFit="cover"
-            transition={300}
+            width="100%"
+            height={250}
+            borderRadius={0}
           />
         }
       >
