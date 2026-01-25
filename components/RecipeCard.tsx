@@ -17,6 +17,7 @@ export type Recipe = {
   meal: "Breakfast" | "Lunch" | "Dinner" | "Desserts";
   tags: string[];
   image?: any; // require(..) or uri
+  cuisine?: string;
 };
 
 export default function RecipeCard({ item }: { item: Recipe }) {

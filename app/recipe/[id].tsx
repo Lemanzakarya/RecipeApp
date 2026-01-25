@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { Image } from "expo-image";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Loading } from "@/components/Loading";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
@@ -60,17 +61,33 @@ export default function RecipeDetailScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </ThemedView>
+      <>
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerTitle: "",
+            headerTintColor: "#fff",
+          }}
+        />
+        <Loading />
+      </>
     );
   }
 
   if (!recipe) {
     return (
-      <ThemedView style={styles.loadingContainer}>
-        <ThemedText>Recipe not found</ThemedText>
-      </ThemedView>
+      <>
+        <Stack.Screen
+          options={{
+            headerTransparent: true,
+            headerTitle: "",
+            headerTintColor: "#fff",
+          }}
+        />
+        <ThemedView style={styles.loadingContainer}>
+          <ThemedText>Recipe not found</ThemedText>
+        </ThemedView>
+      </>
     );
   }
 
@@ -81,7 +98,6 @@ export default function RecipeDetailScreen() {
           headerTransparent: true,
           headerTitle: "",
           headerTintColor: "#fff",
-          headerBackTitleVisible: false,
         }}
       />
 
