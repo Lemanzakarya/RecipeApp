@@ -34,11 +34,7 @@ export default function RecipeCard({ item }: { item: Recipe }) {
         >
           <View style={styles.imageContainer}>
             <ImageWithFallback
-              uri={
-                typeof item.image === "string"
-                  ? item.image
-                  : item.image?.uri ?? undefined
-              }
+              uri={item.image}
               width="100%"
               height={200}
               borderRadius={0}
