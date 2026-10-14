@@ -54,12 +54,25 @@ export default function ExploreScreen() {
   }, [loadRecipes]);
 
   const addIngredient = () => {
-    const value = ingredientInput.trim();
-    if (!value || selectedIngredients.some((item) => item.toLowerCase() === value.toLowerCase())) {
-      return;
-    }
+    const values = ingredientInput
+      .split(/[,;\n]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (values.length === 0) return;
+
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setSelectedIngredients((current) => [...current, value]);
+    setSelectedIngredients((current) => {
+      const next = [...current];
+      const seen = new Set(current.map((item) => item.toLocaleLowerCase()));
+      values.forEach((value) => {
+        const normalized = value.toLocaleLowerCase();
+        if (!seen.has(normalized)) {
+          next.push(value);
+          seen.add(normalized);
+        }
+      });
+      return next;
+    });
     setIngredientInput("");
   };
 
@@ -77,7 +90,17 @@ export default function ExploreScreen() {
       .map((recipe) => {
         const available = recipe.ingredients.map((ingredient) => ingredient.toLowerCase());
         const matchedIngredients = selectedIngredients.filter((selected) =>
-          available.some((ingredient) => ingredient.includes(selected.toLowerCase()))
+          available.some((ingredient) => {
+            const term = selected.toLocaleLowerCase();
+            const singular = term.endsWith("ies")
+              ? `${term.slice(0, -3)}y`
+              : term.endsWith("es")
+                ? term.slice(0, -2)
+                : term.endsWith("s") && !term.endsWith("ss")
+                  ? term.slice(0, -1)
+                  : term;
+            return ingredient.includes(term) || ingredient.includes(singular);
+          })
         );
         return { recipe, matchedIngredients };
       })
