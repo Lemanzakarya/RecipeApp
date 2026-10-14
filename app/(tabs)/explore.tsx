@@ -127,14 +127,16 @@ export default function ExploreScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText type="title">Kitchen Assistant</ThemedText>
-        <ThemedText style={styles.subtitle}>What&apos;s in your fridge today?</ThemedText>
+        <ThemedText type="title">Find recipes by ingredients</ThemedText>
+        <ThemedText style={styles.subtitle}>
+          Add what you have. Recipes with the most matches appear first.
+        </ThemedText>
 
         <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
           <IconSymbol name="magnifyingglass" size={20} color={iconColor} />
           <TextInput
             accessibilityLabel="Ingredient to search"
-            placeholder="Add ingredient (e.g. eggs)"
+            placeholder="Add an ingredient (e.g. eggs)"
             placeholderTextColor={iconColor}
             style={[styles.input, { color: textColor }]}
             value={ingredientInput}
@@ -148,6 +150,9 @@ export default function ExploreScreen() {
             </Pressable>
           )}
         </View>
+        <ThemedText style={styles.inputHint}>
+          Press Enter after each ingredient, or separate several with commas.
+        </ThemedText>
 
         <Pressable
           style={[styles.surpriseBtn, { backgroundColor: tintColor }, filteredData.length === 0 && styles.disabled]}
@@ -156,11 +161,12 @@ export default function ExploreScreen() {
           accessibilityRole="button"
         >
           <IconSymbol name="shuffle" size={20} color="#fff" />
-          <ThemedText style={styles.surpriseBtnText}>Surprise Me</ThemedText>
+          <ThemedText style={styles.surpriseBtnText}>Choose a random match</ThemedText>
         </Pressable>
 
-        <View style={styles.chipsContainer}>
-          {selectedIngredients.map((ingredient) => (
+        <View style={styles.chipsHeader}>
+          <View style={styles.chipsContainer}>
+            {selectedIngredients.map((ingredient) => (
             <Pressable
               key={ingredient}
               accessibilityRole="button"
@@ -171,14 +177,24 @@ export default function ExploreScreen() {
               <ThemedText style={styles.chipText}>{ingredient}</ThemedText>
               <IconSymbol name="xmark" size={12} color={iconColor} />
             </Pressable>
-          ))}
+            ))}
+          </View>
+          {selectedIngredients.length > 0 && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear all ingredients"
+              onPress={() => setSelectedIngredients([])}
+            >
+              <ThemedText style={[styles.clearButton, { color: tintColor }]}>Clear all</ThemedText>
+            </Pressable>
+          )}
         </View>
       </View>
 
       <View style={styles.resultsContainer}>
         <View style={styles.resultsHeader}>
           <ThemedText type="subtitle">
-            {selectedIngredients.length > 0 ? `${filteredData.length} matching recipes` : "All Recipes"}
+            {selectedIngredients.length > 0 ? `${filteredData.length} ${filteredData.length === 1 ? "recipe" : "recipes"} found` : "All recipes"}
           </ThemedText>
         </View>
         <FlatList
@@ -190,7 +206,7 @@ export default function ExploreScreen() {
                 <View style={[styles.matchInfo, { backgroundColor: tintColor + "15" }]}>
                   <IconSymbol name="checkmark.circle.fill" size={16} color={tintColor} />
                   <ThemedText style={[styles.matchText, { color: tintColor }]}>
-                    Matches {item.matchedIngredients.length} of {selectedIngredients.length}: {item.matchedIngredients.join(", ")}
+                    Matches {item.matchedIngredients.length} of {selectedIngredients.length} ingredients: {item.matchedIngredients.join(", ")}
                   </ThemedText>
                 </View>
               )}
@@ -199,7 +215,10 @@ export default function ExploreScreen() {
           )}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <RequestState title="No matching recipes" message="Try a different ingredient." />
+            <RequestState
+              title="No recipes found"
+              message="Try another ingredient or remove one of your selected ingredients."
+            />
           }
         />
       </View>
@@ -210,7 +229,10 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 16 },
-  subtitle: { opacity: 0.6, marginBottom: 16 },
+  subtitle: { opacity: 0.7, marginBottom: 12 },
+  inputHint: { opacity: 0.65, fontSize: 12, marginTop: -4, marginBottom: 12 },
+  chipsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  clearButton: { fontSize: 13, fontWeight: "600", paddingVertical: 6 },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -229,7 +251,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
