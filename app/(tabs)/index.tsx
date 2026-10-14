@@ -1,78 +1,44 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
 
 import CategoryTabs, { type Category } from "@/components/CategoryTabs";
 import RecipeCard, { type Recipe } from "@/components/RecipeCard";
 import RecipesHeader from "@/components/RecipesHeader";
+import { RequestState } from "@/components/RequestState";
 import { ThemedView } from "@/components/ThemedView";
+import { fetchRecipes } from "@/lib/recipes";
 
 export default function HomeScreen() {
-  const [category, setCategory] = useState<string>("all");
-  const [difficulty, setDifficulty] = useState<
-    "All" | "Easy" | "Medium" | "Hard"
-  >("All");
-  const [query, setQuery] = useState<string>("");
+  const [category, setCategory] = useState("all");
+  const [difficulty, setDifficulty] = useState<"All" | "Easy" | "Medium" | "Hard">("All");
+  const [query, setQuery] = useState("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadRecipes = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setRecipes(await fetchRecipes());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not load recipes. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetch("https://dummyjson.com/recipes")
-      .then((res) => res.json())
-      .then((data) => {
-        const mappedRecipes: Recipe[] = data.recipes.map((r: any) => {
-          let meal: Recipe["meal"] = "Dinner";
-          if (r.mealType && r.mealType.length > 0) {
-            const apiMeal = r.mealType[0];
-            if (apiMeal === "Breakfast") meal = "Breakfast";
-            else if (
-              apiMeal === "Lunch" ||
-              apiMeal === "Snack" ||
-              apiMeal === "Appetizer" ||
-              apiMeal === "Side Dish" ||
-              apiMeal === "Beverage"
-            )
-              meal = "Lunch";
-            else if (apiMeal === "Dinner") meal = "Dinner";
-            else if (apiMeal === "Dessert") meal = "Desserts";
-            else meal = "Dinner"; // Default fallback
-          }
-
-          return {
-            id: String(r.id),
-            title: r.name,
-            // Use first instruction as description, truncating if too long, or fallback to cuisine
-            description: r.instructions?.[0]
-              ? r.instructions[0]
-              : `${r.cuisine} cuisine`,
-            difficulty:
-              r.difficulty === "Hard"
-                ? "Hard"
-                : r.difficulty === "Medium"
-                ? "Medium"
-                : "Easy",
-            timeMins: (r.prepTimeMinutes || 0) + (r.cookTimeMinutes || 0),
-            servings: r.servings,
-            meal: meal,
-            tags: r.tags || [],
-            image: r.image,
-          };
-        });
-        setRecipes(mappedRecipes);
-        setLoading(false);
-      })
-      .catch((e) => {
-        console.error("Failed to fetch recipes:", e);
-        setLoading(false);
-      });
-  }, []);
+    void loadRecipes();
+  }, [loadRecipes]);
 
   const categories: Category[] = useMemo(() => {
     const counts = {
       all: recipes.length,
-      breakfast: recipes.filter((r) => r.meal === "Breakfast").length,
-      lunch: recipes.filter((r) => r.meal === "Lunch").length,
-      dinner: recipes.filter((r) => r.meal === "Dinner").length,
-      desserts: recipes.filter((r) => r.meal === "Desserts").length,
+      breakfast: recipes.filter((recipe) => recipe.meal === "Breakfast").length,
+      lunch: recipes.filter((recipe) => recipe.meal === "Lunch").length,
+      dinner: recipes.filter((recipe) => recipe.meal === "Dinner").length,
+      desserts: recipes.filter((recipe) => recipe.meal === "Desserts").length,
     };
     return [
       { key: "all", label: "All", count: counts.all },
@@ -83,34 +49,33 @@ export default function HomeScreen() {
     ];
   }, [recipes]);
 
-  const filtered = useMemo(
-    () =>
-      recipes
-        .filter((r) =>
-          category === "all" ? true : r.meal.toLowerCase() === category
-        )
-        .filter((r) =>
-          difficulty === "All" ? true : r.difficulty === difficulty
-        )
-        .filter((r) => {
-          if (!query.trim()) return true;
-          const hay = (
-            r.title +
-            " " +
-            r.description +
-            " " +
-            r.tags.join(" ")
-          ).toLowerCase();
-          return hay.includes(query.trim().toLowerCase());
-        }),
-    [recipes, category, difficulty, query]
-  );
+  const filtered = useMemo(() => {
+    const search = query.trim().toLowerCase();
+    return recipes
+      .filter((recipe) => category === "all" || recipe.meal.toLowerCase() === category)
+      .filter((recipe) => difficulty === "All" || recipe.difficulty === difficulty)
+      .filter((recipe) => {
+        if (!search) return true;
+        const searchableText = [
+          recipe.title,
+          recipe.description,
+          recipe.cuisine ?? "",
+          ...recipe.tags,
+          ...recipe.ingredients,
+        ]
+          .join(" ")
+          .toLowerCase();
+        return searchableText.includes(search);
+      });
+  }, [recipes, category, difficulty, query]);
 
-  if (loading) {
+  if (loading || error) {
     return (
-      <ThemedView style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" />
-      </ThemedView>
+      <RequestState
+        loading={loading}
+        message={error ?? undefined}
+        onRetry={error ? loadRecipes : undefined}
+      />
     );
   }
 
@@ -118,7 +83,7 @@ export default function HomeScreen() {
     <ThemedView style={styles.container}>
       <FlatList
         data={filtered}
-        keyExtractor={(i) => i.id}
+        keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View>
             <RecipesHeader
@@ -135,7 +100,8 @@ export default function HomeScreen() {
           </View>
         }
         renderItem={({ item }) => <RecipeCard item={item} />}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        ListEmptyComponent={<RequestState />}
+        contentContainerStyle={styles.content}
       />
     </ThemedView>
   );
@@ -143,5 +109,5 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  center: { justifyContent: "center", alignItems: "center" },
+  content: { flexGrow: 1, paddingBottom: 24 },
 });
