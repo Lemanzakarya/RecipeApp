@@ -10,6 +10,7 @@ A cross-platform recipe discovery app built with React Native and Expo. Browse r
 - Find recipes that use ingredients you already have
 - Sort ingredient matches by the number of matching ingredients
 - Pick a random recipe from the current matching results
+- Build a persistent shopping list from recipe ingredients, with duplicate merging and check-off controls
 - View ingredients, nutrition, ratings, and step-by-step instructions
 - Switch between light and dark themes
 
@@ -42,6 +43,8 @@ Recipe content is provided by the [DummyJSON Recipes API](https://dummyjson.com/
 
 - `app/(tabs)/index.tsx` — recipe browsing, filters, and search
 - `app/(tabs)/explore.tsx` — ingredient-based discovery
+- `app/(tabs)/shopping-list.tsx` — saved shopping list
 - `app/recipe/[id].tsx` — recipe details
 - `lib/recipes.ts` — recipe API requests and data mapping
+- `providers/ShoppingListProvider.tsx` — shared shopping-list state and local persistence
 - `components/` — reusable interface components

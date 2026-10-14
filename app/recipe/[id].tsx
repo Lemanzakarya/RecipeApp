@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -9,6 +9,7 @@ import { fetchRecipe } from "@/lib/recipes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { useShoppingList } from "@/providers/ShoppingListProvider";
 
 type RecipeDetail = {
   id: number;
@@ -34,6 +35,8 @@ export default function RecipeDetailScreen() {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addedToList, setAddedToList] = useState(false);
+  const { addIngredients } = useShoppingList();
 
   const iconColor = useThemeColor({}, "icon");
   const tintColor = useThemeColor({}, "tint");
@@ -54,6 +57,7 @@ export default function RecipeDetailScreen() {
     }
     setLoading(true);
     setError(null);
+    setAddedToList(false);
     try {
       setRecipe((await fetchRecipe(recipeId)) as RecipeDetail);
     } catch (cause) {
@@ -166,6 +170,24 @@ export default function RecipeDetailScreen() {
             color={iconColor}
           />
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            addIngredients(recipe.name, recipe.ingredients);
+            setAddedToList(true);
+          }}
+          style={[styles.addToListButton, { backgroundColor: tintColor }]}
+        >
+          <IconSymbol
+            name={addedToList ? "checkmark.circle.fill" : "cart.fill"}
+            size={20}
+            color="#fff"
+          />
+          <ThemedText style={styles.addToListText}>
+            {addedToList ? "Ingredients added to list" : "Add ingredients to shopping list"}
+          </ThemedText>
+        </Pressable>
 
         <View style={styles.section}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -333,6 +355,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 32,
   },
+  addToListButton: {
+    minHeight: 50,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 32,
+  },
+  addToListText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   metaItem: {
     alignItems: "center",
     gap: 6,

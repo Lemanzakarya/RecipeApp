@@ -13,6 +13,7 @@ import {
   AppThemeProvider,
   useThemeController,
 } from "@/providers/ThemeProvider";
+import { ShoppingListProvider } from "@/providers/ShoppingListProvider";
 
 export default function RootLayout() {
   // Continue to read the system scheme; but ThemeProvider below enables manual toggle in UI
@@ -28,7 +29,9 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
-      <InnerLayout systemScheme={colorScheme ?? "light"} />
+      <ShoppingListProvider>
+        <InnerLayout systemScheme={colorScheme ?? "light"} />
+      </ShoppingListProvider>
     </AppThemeProvider>
   );
 }

@@ -25,6 +25,18 @@ const MAPPING = {
   "sun.max.fill": "wb-sunny",
   "moon.fill": "dark-mode",
   photo: "image",
+  "cart.fill": "shopping-cart",
+  "checkmark.circle.fill": "check-circle",
+  circle: "radio-button-unchecked",
+  xmark: "close",
+  "plus.circle.fill": "add-circle",
+  shuffle: "shuffle",
+  tray: "inbox",
+  "star.fill": "star",
+  clock: "access-time",
+  timer: "timer",
+  "person.2": "people",
+  flame: "whatshot",
 } as IconMapping;
 
 /**
