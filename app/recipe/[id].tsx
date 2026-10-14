@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Loading } from "@/components/Loading";
+import { RequestState } from "@/components/RequestState";
+import { fetchRecipe } from "@/lib/recipes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { useShoppingList } from "@/providers/ShoppingListProvider";
 
 type RecipeDetail = {
   id: number;
@@ -29,9 +30,13 @@ type RecipeDetail = {
 };
 
 export default function RecipeDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const recipeId = Array.isArray(id) ? id[0] : id;
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [addedToList, setAddedToList] = useState(false);
+  const { addIngredients } = useShoppingList();
 
   const iconColor = useThemeColor({}, "icon");
   const tintColor = useThemeColor({}, "tint");
@@ -44,22 +49,30 @@ export default function RecipeDetailScreen() {
     "icon"
   );
 
-  useEffect(() => {
-    if (id) {
-      fetch(`https://dummyjson.com/recipes/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setRecipe(data);
-          setLoading(false);
-        })
-        .catch((e) => {
-          console.error(e);
-          setLoading(false);
-        });
+  const loadRecipe = useCallback(async () => {
+    if (!recipeId) {
+      setError("This recipe could not be found.");
+      setLoading(false);
+      return;
     }
-  }, [id]);
+    setLoading(true);
+    setError(null);
+    setAddedToList(false);
+    try {
+      setRecipe((await fetchRecipe(recipeId)) as RecipeDetail);
+    } catch (cause) {
+      setRecipe(null);
+      setError(cause instanceof Error ? cause.message : "Could not load this recipe. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [recipeId]);
 
-  if (loading) {
+  useEffect(() => {
+    void loadRecipe();
+  }, [loadRecipe]);
+
+  if (loading || error || !recipe) {
     return (
       <>
         <Stack.Screen
@@ -69,24 +82,11 @@ export default function RecipeDetailScreen() {
             headerTintColor: "#fff",
           }}
         />
-        <Loading />
-      </>
-    );
-  }
-
-  if (!recipe) {
-    return (
-      <>
-        <Stack.Screen
-          options={{
-            headerTransparent: true,
-            headerTitle: "",
-            headerTintColor: "#fff",
-          }}
+        <RequestState
+          loading={loading}
+          message={error ?? "This recipe could not be found."}
+          onRetry={error ? loadRecipe : undefined}
         />
-        <ThemedView style={styles.loadingContainer}>
-          <ThemedText>Recipe not found</ThemedText>
-        </ThemedView>
       </>
     );
   }
@@ -170,6 +170,24 @@ export default function RecipeDetailScreen() {
             color={iconColor}
           />
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            addIngredients(recipe.name, recipe.ingredients);
+            setAddedToList(true);
+          }}
+          style={[styles.addToListButton, { backgroundColor: tintColor }]}
+        >
+          <IconSymbol
+            name={addedToList ? "checkmark.circle.fill" : "cart.fill"}
+            size={20}
+            color="#fff"
+          />
+          <ThemedText style={styles.addToListText}>
+            {addedToList ? "Ingredients added to list" : "Add ingredients to shopping list"}
+          </ThemedText>
+        </Pressable>
 
         <View style={styles.section}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -337,6 +355,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 32,
   },
+  addToListButton: {
+    minHeight: 50,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 32,
+  },
+  addToListText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   metaItem: {
     alignItems: "center",
     gap: 6,
