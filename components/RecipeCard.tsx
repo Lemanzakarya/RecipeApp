@@ -7,18 +7,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-export type Recipe = {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  timeMins: number;
-  servings: number;
-  meal: "Breakfast" | "Lunch" | "Dinner" | "Desserts";
-  tags: string[];
-  image?: any; // require(..) or uri
-  cuisine?: string;
-};
+import type { Recipe } from "@/lib/recipes";
+export type { Recipe };
 
 export default function RecipeCard({ item }: { item: Recipe }) {
   const card = useThemeColor({}, "background");
