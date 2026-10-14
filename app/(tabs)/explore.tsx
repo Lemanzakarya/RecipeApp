@@ -107,7 +107,7 @@ export default function ExploreScreen() {
         <ThemedText type="title">Kitchen Assistant</ThemedText>
         <ThemedText style={styles.subtitle}>What's in your fridge today?</ThemedText>
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
           <IconSymbol name="magnifyingglass" size={20} color={iconColor} />
           <TextInput
             accessibilityLabel="Ingredient to search"
@@ -176,7 +176,7 @@ export default function ExploreScreen() {
           )}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <RequestState message="No recipes match those ingredients. Try a different ingredient." />
+            <RequestState title="No matching recipes" message="Try a different ingredient." />
           }
         />
       </View>
