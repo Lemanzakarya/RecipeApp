@@ -105,7 +105,7 @@ export default function ExploreScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <ThemedText type="title">Kitchen Assistant</ThemedText>
-        <ThemedText style={styles.subtitle}>What's in your fridge today?</ThemedText>
+        <ThemedText style={styles.subtitle}>What&apos;s in your fridge today?</ThemedText>
 
         <View style={[styles.inputContainer, { backgroundColor: inputBg }]}>
           <IconSymbol name="magnifyingglass" size={20} color={iconColor} />
