@@ -4,7 +4,6 @@ import { useLocalSearchParams, Stack } from "expo-router";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { RequestState } from "@/components/RequestState";
 import { fetchRecipe } from "@/lib/recipes";
 import { useThemeColor } from "@/hooks/useThemeColor";
