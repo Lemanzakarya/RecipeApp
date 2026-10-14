@@ -7,10 +7,11 @@ import { ThemedView } from "@/components/ThemedView";
 type Props = {
   loading?: boolean;
   message?: string;
+  title?: string;
   onRetry?: () => void;
 };
 
-export function RequestState({ loading = false, message, onRetry }: Props) {
+export function RequestState({ loading = false, message, title, onRetry }: Props) {
   return (
     <ThemedView style={styles.container}>
       {loading ? (
@@ -18,7 +19,7 @@ export function RequestState({ loading = false, message, onRetry }: Props) {
       ) : (
         <View style={styles.content}>
           <ThemedText type="subtitle" style={styles.title}>
-            {message ? "Something went wrong" : "No recipes found"}
+            {title ?? (message ? "Something went wrong" : "No recipes found")}
           </ThemedText>
           <ThemedText style={styles.message}>
             {message ?? "Try changing your filters or search terms."}
